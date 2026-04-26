@@ -1,17 +1,12 @@
 <?php
-
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\TwoFactorController;
-
 // =============================================
-// ĐÃ CHỐT CỨNG — THÀNH VIÊN KHÔNG ĐƯỢC SỬA
+// ĐỊNH NGHĨA ROUTE — CHỐT CỨNG
+// THÀNH VIÊN KHÔNG ĐƯỢC SỬA FILE NÀY
 // =============================================
 
-// Người 1 điền code vào AuthController::login()
-// Người 4 điền code vào ThrottleLoginAttempts::handle()
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle.login');
+// --- Người 1 điền code vào AuthController::login()
+// --- Người 4 sẽ áp dụng ThrottleLoginAttempts trong AuthController::login()
+$router->post('/api/login', 'AuthController', 'login');
 
-// Người 5 điền code vào TwoFactorController::verify()
-Route::post('/2fa/verify', [TwoFactorController::class, 'verify']);
-
+// --- Người 5 điền code vào TwoFactorController::verify()
+$router->post('/api/2fa/verify', 'TwoFactorController', 'verify');

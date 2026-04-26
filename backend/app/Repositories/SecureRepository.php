@@ -4,16 +4,13 @@ namespace App\Repositories;
 
 use PDO;
 
-class SecureRepository implements RepositoryInterface
+class SecureRepository extends UserRepository
 {
-    // Wraps queries trong prepared statements
-    public function __construct(private PDO $pdo)
-    {
-    }
+    // Decorator Pattern: Bọc truy vấn trong Prepared Statements để chống SQL Injection
 
-    public function findById(int $id): mixed
-    {
-        // TODO: Use $this->pdo->prepare() to prevent SQL Injection
-        return null;
-    }
+    // AbstractRepository đã xử lý PDO cơ bản.
+    // Người 3 thêm các hàm đặc thù cần bảo mật cao hơn tại đây.
+
+    // TODO (Người 3): Thêm các hàm truy vấn nhạy cảm (VD: đổi mật khẩu, xóa tài khoản)
+    // public function updatePassword(int $userId, string $hashedPassword): bool { ... }
 }

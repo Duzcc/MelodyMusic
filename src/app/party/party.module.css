@@ -1,0 +1,287 @@
+.container {
+  padding: 40px;
+  min-height: 100vh;
+  display: flex;
+  gap: 40px;
+}
+
+.leftCol {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.rightCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 350px;
+}
+
+/* Header */
+.pageTitle {
+  font-size: 32px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.liveBadge {
+  background: var(--accent-pink);
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(201, 0, 118, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(201, 0, 118, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(201, 0, 118, 0); }
+}
+
+/* Player Box */
+.playerCard {
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  display: flex;
+  gap: 32px;
+  align-items: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cover {
+  width: 180px;
+  height: 180px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.songInfo {
+  flex: 1;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.artist {
+  font-size: 16px;
+  color: var(--text-secondary);
+}
+
+.syncStatus {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4CAF50;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Listeners */
+.listenersCard {
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text-secondary);
+}
+
+.avatarGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.avatarItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid transparent;
+}
+
+.avatarHost {
+  border-color: var(--accent-pink);
+}
+
+.avatarName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Host Panel */
+.hostCard {
+  background: var(--accent-gradient);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(201, 0, 118, 0.3);
+}
+
+.hostTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 8px;
+}
+
+.keyCode {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  margin: 16px 0;
+}
+
+.qrMock {
+  width: 140px;
+  height: 140px;
+  background: white;
+  margin: 0 auto 16px;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.qrImg {
+  width: 100%;
+  height: 100%;
+}
+
+.copyBtn {
+  background: rgba(0,0,0,0.3);
+  color: white;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.copyBtn:hover {
+  background: rgba(0,0,0,0.5);
+}
+
+/* Chat Card */
+.chatCard {
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  max-height: 500px;
+}
+
+.chatHeader {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-weight: 700;
+}
+
+.chatMessages {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chatMessages::-webkit-scrollbar { display: none; }
+
+.message {
+  display: flex;
+  gap: 12px;
+}
+
+.msgAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.msgName {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.msgText {
+  font-size: 14px;
+  line-height: 1.4;
+  background: rgba(255,255,255,0.05);
+  padding: 8px 12px;
+  border-radius: 0 12px 12px 12px;
+}
+
+.message.self {
+  flex-direction: row-reverse;
+}
+
+.message.self .msgName {
+  text-align: right;
+  color: var(--accent-pink);
+}
+
+.message.self .msgText {
+  background: var(--accent-pink);
+  border-radius: 12px 0 12px 12px;
+}
+
+.chatInputBox {
+  padding: 16px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  gap: 12px;
+}
+
+.chatInput {
+  flex: 1;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  padding: 12px 16px;
+  border-radius: 20px;
+  color: white;
+  outline: none;
+}
+
+.sendBtn {
+  background: var(--accent-pink);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}

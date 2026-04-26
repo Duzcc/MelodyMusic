@@ -1,0 +1,33 @@
+.homeLayout {
+  display: flex;
+  gap: 32px;
+}
+
+.mainFeed {
+  flex: 1;
+  min-width: 0;
+}
+
+.sideFeed {
+  width: 380px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+@media (max-width: 1200px) {
+  .sideFeed {
+    width: 320px;
+  }
+}
+
+@media (max-width: 992px) {
+  .homeLayout {
+    flex-direction: column;
+  }
+  
+  .sideFeed {
+    width: 100%;
+  }
+}

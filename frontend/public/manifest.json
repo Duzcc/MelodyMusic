@@ -1,0 +1,16 @@
+{
+  "name": "Melodies Music",
+  "short_name": "Melodies",
+  "description": "Premium music streaming experience.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#c90076",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3658/3658390.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

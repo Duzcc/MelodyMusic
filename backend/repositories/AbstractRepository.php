@@ -5,6 +5,8 @@
 // Người 3 có thể override nếu cần
 // =============================================
 
+require_once __DIR__ . '/RepositoryInterface.php';
+
 abstract class AbstractRepository implements RepositoryInterface
 {
     protected PDO $pdo;

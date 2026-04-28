@@ -22,12 +22,10 @@ class SecureRepository extends UserRepository
         // Gọi hàm gốc từ UserRepository (PDO Prepared Statement)
         $user = parent::findByEmail($email);
 
-        // Thêm logic bảo mật: Kiểm tra tài khoản bị khóa
-        if ($user && $user->is_locked) {
-            return null; // Trả về null nếu tài khoản bị khóa
-        }
-
-        return $user;
+        // Thêm logic bảo mật: Kiểm tra tài khoản có bị khóa không
+        // Trả về $user kèm thông tin is_locked để Controller tự xử lý
+        // (Không trả null vì Controller cần phân biệt "không tồn tại" vs "bị khóa")
+        return $user; // $user->is_locked === 1 nghĩa là bị khóa
     }
 
     /**

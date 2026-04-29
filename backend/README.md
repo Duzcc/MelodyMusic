@@ -27,12 +27,14 @@ backend/
 │   └── SecureRepository.php       ← Người 3 (Decorator Pattern)
 │
 ├── services/              ← Nghiệp vụ bảo mật
+│   ├── AuthService.php            ← Người 1 (Xử lý logic đăng nhập)
 │   ├── CsrfTokenManager.php       ← Người 1
 │   ├── InputSanitizer.php         ← Người 2
 │   ├── JwtService.php             ← Người 4
 │   └── TwoFactorService.php       ← Người 5
 │
 ├── middleware/
+│   ├── AuthMiddleware.php         ← Người X (Bảo vệ route)
 │   └── ThrottleLoginAttempts.php  ← Người 4
 │
 ├── traits/
@@ -51,14 +53,15 @@ backend/
 
 | Người | Nhiệm vụ | File cần viết |
 |-------|---------|---------------|
-| 1 | Login + CSRF | `controllers/AuthController.php::login()`, `services/CsrfTokenManager.php` |
+| 1 | Login + CSRF | `controllers/AuthController.php::login()`, `services/AuthService.php`, `services/CsrfTokenManager.php` |
 | 2 | Sanitizer | `services/InputSanitizer.php`, `traits/Sanitizable.php` |
 | 3 | Repository + SQL Injection | `repositories/UserRepository.php`, `repositories/SecureRepository.php` |
 | 4 | Brute Force + JWT Session | `middleware/ThrottleLoginAttempts.php`, `services/JwtService.php` |
+| X | Middleware (nếu cần) | `middleware/AuthMiddleware.php` |
 | 5 | OTP 2FA | `controllers/TwoFactorController.php::verify()`, `services/TwoFactorService.php` |
 
 ## Quy tắc KHÔNG ĐƯỢC vi phạm
-- ❌ Không được thêm `require_once` mới vào Controller
+- ❌ Không được thêm `require_once` mới vào Controller (Ngoại trừ Lead đã thêm AuthService)
 - ❌ Không được sửa `routes/api.php`
 - ❌ Không được sửa `core/`, `config/`, `index.php`
 - ✅ Chỉ viết code vào trong ruột các hàm đã có `// TODO`

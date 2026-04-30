@@ -1,21 +1,39 @@
 <?php
 // =============================================
 // INPUT SANITIZER
-// TODO (Người 2): Viết logic xử lý vào đây
+// Hoàn thiện: Người 2
 // =============================================
 
 class InputSanitizer
 {
     public function sanitize(string $input): string
     {
-        // TODO (Người 2): Xóa thẻ HTML nguy hiểm, chống XSS
-        // Gợi ý: return htmlspecialchars(strip_tags(trim($input)), ENT_QUOTES, 'UTF-8');
+        // Xóa khoảng trắng đầu/cuối
+        $input = trim($input);
+
+        // Loại bỏ thẻ HTML
+        $input = strip_tags($input);
+
+        // Chống XSS
+        $input = htmlspecialchars($input, ENT_QUOTES, 'UTF-8');
+
         return $input;
     }
 
     public function sanitizeArray(array $data): array
     {
-        // TODO (Người 2): Áp dụng sanitize() cho từng phần tử trong mảng
-        return $data;
+        $sanitizedData = [];
+
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                // xử lý mảng lồng nhau
+                $sanitizedData[$key] = $this->sanitizeArray($value);
+            } else {
+                // ép về string rồi sanitize
+                $sanitizedData[$key] = $this->sanitize((string)$value);
+            }
+        }
+
+        return $sanitizedData;
     }
 }

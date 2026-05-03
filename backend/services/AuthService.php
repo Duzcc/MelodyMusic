@@ -41,13 +41,15 @@ class AuthService
         ];
     }
 
-    // 3. Tạo token
-    $jwtService = new JwtService();
-    $token = $jwtService->generateToken($user);
+    // 3. Đúng mật khẩu -> Sinh và gửi OTP
+    require_once __DIR__ . '/../services/TwoFactorService.php';
+    $twoFactorService = new TwoFactorService();
+    $twoFactorService->generateAndSendOtp($email);
 
     return [
-        'status' => 'success',
-        'token'  => $token
+        'status' => 'requires_2fa',
+        'message' => 'Vui lòng kiểm tra OTP để hoàn tất đăng nhập',
+        'email'  => $email
     ];
     }
 }

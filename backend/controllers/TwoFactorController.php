@@ -55,10 +55,21 @@ class TwoFactorController extends BaseController
 
         $_SESSION['2fa_verified'][$email] = true;
 
-        // 5. Trả kết quả
+        // 5. Tạo JWT Token
+        require_once __DIR__ . '/../repositories/SecureRepository.php';
+        require_once __DIR__ . '/../services/JwtService.php';
+        
+        $repo = new SecureRepository();
+        $user = $repo->findByEmail($email);
+        
+        $jwtService = new JwtService();
+        $token = $jwtService->generateToken($user);
+
+        // 6. Trả kết quả kèm Token
         $this->json([
             'success' => true,
-            'message' => 'Xác thực 2FA thành công'
+            'message' => 'Xác thực 2FA thành công',
+            'token'   => $token
         ]);
     }
 }

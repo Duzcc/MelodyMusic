@@ -33,13 +33,27 @@ class AuthService
         ];
     }
 
+    // 1.5. Kiểm tra tài khoản có đang bị khóa trong CSDL không
+    if (isset($user['is_locked']) && $user['is_locked'] == 1) {
+        return [
+            'status' => 'error',
+            'message' => 'Tài khoản đã bị khóa do đăng nhập sai nhiều lần.'
+        ];
+    }
+
     // 2. Kiểm tra mật khẩu
     if (!password_verify($password, $user['password'])) {
+        // Ghi nhận 1 lần sai vào CSDL (tự khóa nếu đủ 5 lần)
+        $repo->recordLoginFailure($email);
+        
         return [
             'status' => 'error',
             'message' => 'Sai mật khẩu'
         ];
     }
+
+    // Đăng nhập thành công -> Reset bộ đếm sai trong CSDL
+    $repo->resetLoginFailures($email);
 
     // 3. Đúng mật khẩu -> Sinh và gửi OTP
     require_once __DIR__ . '/../services/TwoFactorService.php';

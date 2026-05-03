@@ -27,7 +27,40 @@ class AuthController extends BaseController
         //   $data        = $this->sanitizeData($body);     // Lọc dữ liệu (Trait)
         //   $csrf        = new CsrfTokenManager();
         //   $authService = new AuthService();              // Gọi Service xử lý nghiệp vụ
-        $this->json(['message' => 'TODO']);
+    // 1. Lấy dữ liệu từ request
+    $body = $this->getBody();
+
+    // 2. Làm sạch dữ liệu
+    $data = $this->sanitizeData($body);
+
+    // 3. Kiểm tra dữ liệu đầu vào
+    if (!isset($data['email']) || !isset($data['password']) || !isset($data['csrf_token'])) {
+        $this->json([
+            'success' => false,
+            'message' => 'Thiếu dữ liệu'
+        ]);
+        return;
+    }
+
+    // 4. Kiểm tra CSRF
+    $csrf = new CsrfTokenManager();
+    if (!$csrf->validateToken($data['csrf_token'])) {
+        $this->json([
+            'success' => false,
+            'message' => 'CSRF token không hợp lệ'
+        ]);
+        return;
+    }
+
+    // 5. Gọi AuthService để login
+    $authService = new AuthService();
+    $result = $authService->attemptLogin(
+        $data['email'],
+        $data['password']
+    );
+
+    // 6. Trả kết quả về client
+    $this->json($result);
     }
 }
 

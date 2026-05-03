@@ -27,6 +27,9 @@ class AuthController extends BaseController
         //   $data        = $this->sanitizeData($body);     // Lọc dữ liệu (Trait)
         //   $csrf        = new CsrfTokenManager();
         //   $authService = new AuthService();              // Gọi Service xử lý nghiệp vụ
+    // 0. Kiểm tra số lần đăng nhập sai (Brute Force)
+    ThrottleLoginAttempts::handle();
+
     // 1. Lấy dữ liệu từ request
     $body = $this->getBody();
 
@@ -59,8 +62,14 @@ class AuthController extends BaseController
         $data['password']
     );
 
-    // 6. Trả kết quả về client
+    // 6. Xử lý ghi nhận Throttle dựa trên kết quả
+    if ($result['status'] === 'success') {
+        ThrottleLoginAttempts::clear();
+    } else {
+        ThrottleLoginAttempts::recordFailedAttempt();
+    }
+
+    // 7. Trả kết quả về client
     $this->json($result);
     }
 }
-

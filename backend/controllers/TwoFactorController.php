@@ -20,9 +20,24 @@ class TwoFactorController extends BaseController
      */
     public function verify(): void
     {
+        // 0. Chống Brute Force cho OTP (Ngăn chặn spam thử mã OTP)
+        require_once __DIR__ . '/../middleware/ThrottleLoginAttempts.php';
+        ThrottleLoginAttempts::handle();
+
         // 1. Lấy dữ liệu từ request
         $body = $this->getBody();
         $data = $this->sanitizeData($body);
+
+        // 1.5. Kiểm tra CSRF (Bảo vệ form nhập OTP)
+        require_once __DIR__ . '/../services/CsrfTokenManager.php';
+        $csrf = new CsrfTokenManager();
+        if (!isset($data['csrf_token']) || !$csrf->validateToken($data['csrf_token'])) {
+            $this->json([
+                'success' => false,
+                'message' => 'CSRF token không hợp lệ'
+            ], 403);
+            return;
+        }
 
         $email = $data['email'] ?? '';
         $otp   = $data['otp']   ?? '';
@@ -41,12 +56,18 @@ class TwoFactorController extends BaseController
         $isValid = $twoFactor->verifyOtp($email, $otp);
 
         if (!$isValid) {
+            // Ghi nhận 1 lần sai để chống Brute Force
+            ThrottleLoginAttempts::recordFailedAttempt();
+
             $this->json([
                 'success' => false,
                 'message' => 'OTP không hợp lệ hoặc đã hết hạn'
             ], 401);
             return;
         }
+
+        // OTP đúng -> Xóa lịch sử Brute Force
+        ThrottleLoginAttempts::clear();
 
         // 4. Thành công → đánh dấu đã xác thực 2FA
         if (session_status() === PHP_SESSION_NONE) {

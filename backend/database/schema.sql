@@ -29,6 +29,12 @@ CREATE TABLE IF NOT EXISTS login_attempts (
     attempted_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Dữ liệu mẫu để test (password = '123456')
+-- Dữ liệu mẫu để test
+-- Mật khẩu các user:
+--   test@melody.com  → password
+--   nam@melody.com   → melody123
+--   admin@melody.com → admin2024
 INSERT INTO users (name, email, password) VALUES
-('Test User', 'test@melody.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
+('Test User',  'test@melody.com',  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
+('Nguyễn Nam', 'nam@melody.com',   '$2y$12$svNqLB2cz7TmIadnYDi9He1yigcAWv5iown/fBu6VDoU5XA648wsC'),
+('Admin User', 'admin@melody.com', '$2y$12$8Fh8Wk.6f3U9UKESks1XS.h6Vu2eI0BI/jVWqLahOMXX1cKLKnq0m');

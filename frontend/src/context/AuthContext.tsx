@@ -48,13 +48,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await fetch(`${API_URL}/csrf-token`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
       });
-      const data = await res.json();
-      return data.csrf_token;
+      const text = await res.text();
+      // Trước khi parse JSON, kiểm tra xem response có phải JSON không
+      try {
+        const data = JSON.parse(text);
+        return data.csrf_token;
+      } catch {
+        console.error('Được phản hồi từ máy chủ nhưng không phải JSON:', text.substring(0, 200));
+        return null;
+      }
     } catch (err) {
-      console.error('Lỗi khi lấy CSRF Token:', err);
+      console.error('Không thể kết nối đến máy chủ BE. Hãy kiểm tra lại php -S localhost:8000 có đang chạy không.', err);
       return null;
     }
   };
@@ -68,14 +74,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: 'Không thể kết nối máy chủ an toàn' };
       }
 
-      // Must include credentials so PHPSESSID cookie is sent/stored
-      const res = await fetch(`${API_URL}/login`, {
+      const loginRes = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ email, password: pass, csrf_token })
       });
-      const data = await res.json();
+
+      // Bắt buộc đọc dưới dạng text trước, phong ngừa PHP trả HTML lỗi
+      const loginText = await loginRes.text();
+      let data: any;
+      try {
+        data = JSON.parse(loginText);
+      } catch {
+        console.error('Server trả HTML thay vì JSON (có thể do lỗi PHP). Nội dung:', loginText.substring(0, 300));
+        setIsLoading(false);
+        return { success: false, error: 'Máy chủ gặp lỗi. Xem terminal PHP để biết chi tiết.' };
+      }
 
       if (data.status === 'requires_2fa') {
         setIsLoading(false);
@@ -89,9 +104,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setIsLoading(false);
       return { success: false, error: 'Phản hồi không xác định' };
-    } catch (err) {
+    } catch (err: any) {
       setIsLoading(false);
-      return { success: false, error: 'Lỗi mạng' };
+      // Lỗi thực sự: không kết nối được tới localhost:8000
+      const msg = err?.message || String(err);
+      console.error('Lỗi fetch login:', msg);
+      return { success: false, error: 'Không kết nối được Backend. Kiểm tra php -S localhost:8000 có chạy không.' };
     }
   };
 

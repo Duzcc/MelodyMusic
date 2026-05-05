@@ -14,9 +14,13 @@ CREATE TABLE IF NOT EXISTS users (
     otp               VARCHAR(6)          NULL,
     otp_expires       DATETIME            NULL,
     login_fail_count  INT                 NOT NULL DEFAULT 0,
+    locked_until      DATETIME            NULL DEFAULT NULL,
     is_locked         TINYINT(1)          NOT NULL DEFAULT 0,
     created_at        DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Nếu bạn đã import schema cũ, chạy lệnh này để thêm cột locked_until:
+-- ALTER TABLE users ADD COLUMN locked_until DATETIME NULL DEFAULT NULL AFTER login_fail_count;
 
 CREATE TABLE IF NOT EXISTS login_attempts (
     id             INT AUTO_INCREMENT PRIMARY KEY,

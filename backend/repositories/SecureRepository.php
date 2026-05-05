@@ -9,7 +9,7 @@
 //   findById()            → Validate id > 0 trước khi chạy SQL
 //   findByEmail()         → Validate email format trước khi chạy SQL
 //   updatePassword()      → Đổi mật khẩu an toàn (bcrypt + PDO)
-//   recordLoginFailure()  → Ghi log thất bại + tự khóa sau 5 lần sai
+//   recordLoginFailure()  → Progressive Lockout: Khóa lũy tiến 5/10/15/30 phút
 //   resetLoginFailures()  → Reset bộ đếm sau khi đăng nhập thành công
 //
 // Tất cả câu lệnh SQL đều dùng PDO Prepared Statements
@@ -84,45 +84,87 @@ class SecureRepository extends UserRepository
     }
 
     /**
-     * Ghi nhận một lần đăng nhập thất bại:
-     *  1. Tăng login_fail_count lên 1
-     *  2. Tự động khóa tài khoản (is_locked = 1) nếu đạt 5 lần sai
-     *  3. Lưu bản ghi vào bảng login_attempts (IP + email + thời gian)
+     * Ghi nhận một lần đăng nhập thất bại và áp dụng khóa lũy tiến.
+     * - 5 lần sai  → khóa 5 phút  (cột locked_until)
+     * - 10 lần sai → khóa 10 phút
+     * - 15 lần sai → khóa 15 phút
+     * - 20 lần sai → khóa 30 phút
+     * - 25+ lần   → khóa hẳn (is_locked = 1)
      */
     public function recordLoginFailure(string $email): void
     {
-        // Tăng bộ đếm và tự khóa khi đủ ngưỡng 5 lần
-        $stmt = $this->pdo->prepare(
-            "UPDATE users
-             SET login_fail_count = login_fail_count + 1,
-                 is_locked        = IF(login_fail_count + 1 >= 5, 1, 0)
-             WHERE email = :email"
-        );
-        $stmt->execute(['email' => $email]);
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
 
-        // Lưu lịch sử vào bảng login_attempts để audit sau
+        // Bảng cấp độ khóa (số lần sai tích lũy => phút khóa)
+        $lockTiers = [
+            20 => 30,   // 20 sai → khóa 30 phút
+            15 => 15,   // 15 sai → khóa 15 phút
+            10 => 10,   // 10 sai → khóa 10 phút
+            5  => 5,    //  5 sai → khóa 5 phút
+        ];
+        $permanentThreshold = 25;
+
+        // Lấy số lần sai hiện tại
+        $user = parent::findByEmail($email);
+        if (!$user) return;
+
+        $newCount = $user->login_fail_count + 1;
+        $lockedUntil = null;
+        $isLocked = 0;
+
+        if ($newCount >= $permanentThreshold) {
+            // Khóa vĩnh viễn
+            $isLocked = 1;
+        } else {
+            // Xác định cấp độ khóa tạm thời
+            foreach ($lockTiers as $threshold => $minutes) {
+                if ($newCount >= $threshold) {
+                    $lockedUntil = date('Y-m-d H:i:s', time() + $minutes * 60);
+                    break;
+                }
+            }
+        }
+
+        // Cập nhật DB
         $stmt = $this->pdo->prepare(
-            "INSERT INTO login_attempts (ip_address, email)
-             VALUES (:ip, :email)"
+            'UPDATE users
+             SET login_fail_count = :count,
+                 locked_until     = :until,
+                 is_locked        = :locked
+             WHERE email = :email'
         );
         $stmt->execute([
-            'ip'    => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
-            'email' => $email,
+            ':count'  => $newCount,
+            ':until'  => $lockedUntil,
+            ':locked' => $isLocked,
+            ':email'  => $email,
+        ]);
+
+        // Lưu lịch sử vào bảng login_attempts để audit
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO login_attempts (ip_address, email) VALUES (:ip, :email)'
+        );
+        $stmt->execute([
+            ':ip'    => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
+            ':email' => $email,
         ]);
     }
 
     /**
      * Reset bộ đếm về 0 sau khi đăng nhập thành công.
-     * Mở khóa tài khoản nếu đang bị khóa.
+     * Mở khóa tài khoản nếu đang bị khóa (cả tạm thời và vĩnh viễn).
      */
     public function resetLoginFailures(string $email): void
     {
         $stmt = $this->pdo->prepare(
-            "UPDATE users
+            'UPDATE users
              SET login_fail_count = 0,
+                 locked_until     = NULL,
                  is_locked        = 0
-             WHERE email = :email"
+             WHERE email = :email'
         );
-        $stmt->execute(['email' => $email]);
+        $stmt->execute([':email' => $email]);
     }
 }

@@ -33,11 +33,20 @@ class AuthService
         ];
     }
 
-    // 1.5. Kiểm tra tài khoản có đang bị khóa trong CSDL không
+    // 1.5. Kiểm tra tài khoản có đang bị khóa không
     if (isset($user->is_locked) && $user->is_locked == 1) {
         return [
-            'status' => 'error',
-            'message' => 'Tài khoản đã bị khóa do đăng nhập sai nhiều lần.'
+            'status'  => 'error',
+            'message' => 'Tài khoản đã bị khóa vĩnh viễn do đăng nhập sai quá nhiều lần. Liên hệ quản trị viên.'
+        ];
+    }
+
+    // Kiểm tra khóa tạm thời (Progressive Lockout)
+    if (!empty($user->locked_until) && strtotime($user->locked_until) > time()) {
+        $remainingMinutes = ceil((strtotime($user->locked_until) - time()) / 60);
+        return [
+            'status'  => 'error',
+            'message' => "Tài khoản tạm thời bị khóa. Vui lòng thử lại sau {$remainingMinutes} phút."
         ];
     }
 

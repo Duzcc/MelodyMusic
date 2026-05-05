@@ -21,9 +21,21 @@ spl_autoload_register(function (string $class) {
 
 // Cấu hình header JSON cho API
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+
+// Cho phép Frontend Next.js gọi API và gửi kèm Cookie (Session)
+$allowedOrigins = ['http://localhost:3000'];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($origin, $allowedOrigins)) {
+    header("Access-Control-Allow-Origin: $origin");
+} else {
+    // Dự phòng khi test bằng Postman
+    header("Access-Control-Allow-Origin: *");
+}
+
+header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-CSRF-Token');
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit(); }
 
 // Khởi động Router

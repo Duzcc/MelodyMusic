@@ -9,9 +9,16 @@ export interface User {
   name: string;
 }
 
+export interface AuthResponse {
+  success: boolean;
+  requires2FA?: boolean;
+  error?: string;
+}
+
 interface AuthContextType {
   currentUser: User | null;
-  login: (email: string, pass: string) => Promise<boolean>;
+  login: (email: string, pass: string) => Promise<AuthResponse>;
+  verifyOtp: (email: string, otp: string) => Promise<AuthResponse>;
   register: (email: string, pass: string, name: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
@@ -33,62 +40,126 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, pass: string) => {
-    setIsLoading(true);
-    // Simulate network delay for luxury feel
-    await new Promise(r => setTimeout(r, 800));
-    
-    const dbRaw = localStorage.getItem('melodies-users-db');
-    const db: Record<string, any> = dbRaw ? JSON.parse(dbRaw) : {};
-    
-    if (db[email] && db[email].pass === pass) {
-      const user = db[email].user;
-      setCurrentUser(user);
-      localStorage.setItem('melodies-active-user', JSON.stringify(user));
-      setIsLoading(false);
-      return true;
+  // Base API URL
+  const API_URL = 'http://localhost/melodymusic-api/api';
+
+  // Helper to fetch CSRF token
+  const fetchCsrfToken = async () => {
+    try {
+      const res = await fetch(`${API_URL}/csrf-token`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const data = await res.json();
+      return data.csrf_token;
+    } catch (err) {
+      console.error('Lỗi khi lấy CSRF Token:', err);
+      return null;
     }
-    
-    setIsLoading(false);
-    return false;
+  };
+
+  const login = async (email: string, pass: string): Promise<AuthResponse> => {
+    setIsLoading(true);
+    try {
+      const csrf_token = await fetchCsrfToken();
+      if (!csrf_token) {
+        setIsLoading(false);
+        return { success: false, error: 'Không thể kết nối máy chủ an toàn' };
+      }
+
+      // Must include credentials so PHPSESSID cookie is sent/stored
+      const res = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password: pass, csrf_token })
+      });
+      const data = await res.json();
+
+      if (data.status === 'requires_2fa') {
+        setIsLoading(false);
+        return { success: true, requires2FA: true };
+      }
+
+      if (data.status === 'error') {
+        setIsLoading(false);
+        return { success: false, error: data.message || 'Lỗi đăng nhập' };
+      }
+
+      setIsLoading(false);
+      return { success: false, error: 'Phản hồi không xác định' };
+    } catch (err) {
+      setIsLoading(false);
+      return { success: false, error: 'Lỗi mạng' };
+    }
+  };
+
+  const verifyOtp = async (email: string, otp: string): Promise<AuthResponse> => {
+    setIsLoading(true);
+    try {
+      // Ở đây ta dùng CSRF cũ nếu còn sống, hoặc fetch cái mới
+      const csrf_token = await fetchCsrfToken();
+
+      const res = await fetch(`${API_URL}/2fa/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, otp, csrf_token })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        // Lưu JWT token
+        localStorage.setItem('melodies-jwt', data.token);
+        
+        // Giải mã JWT thủ công để lấy thông tin User (vì ta không dùng thư viện ngoài)
+        try {
+          const payloadBase64 = data.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+          const payloadJson = decodeURIComponent(atob(payloadBase64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+          const userData = JSON.parse(payloadJson);
+          
+          setCurrentUser({
+            id: userData.id,
+            email: userData.email,
+            name: userData.name
+          });
+          localStorage.setItem('melodies-active-user', JSON.stringify(userData));
+        } catch (e) {
+          console.error('Không thể parse token', e);
+        }
+
+        setIsLoading(false);
+        return { success: true };
+      }
+
+      setIsLoading(false);
+      return { success: false, error: data.message || 'OTP không hợp lệ' };
+    } catch (err) {
+      setIsLoading(false);
+      return { success: false, error: 'Lỗi mạng' };
+    }
   };
 
   const register = async (email: string, pass: string, name: string) => {
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 1200));
-
-    const dbRaw = localStorage.getItem('melodies-users-db');
-    const db: Record<string, any> = dbRaw ? JSON.parse(dbRaw) : {};
-
-    if (db[email]) {
-      setIsLoading(false);
-      return false; // already exists
-    }
-
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      email,
-      name
-    };
-
-    db[email] = { user: newUser, pass };
-    localStorage.setItem('melodies-users-db', JSON.stringify(db));
-    
-    // Auto login
-    setCurrentUser(newUser);
-    localStorage.setItem('melodies-active-user', JSON.stringify(newUser));
+    // TODO: Gọi API đăng ký khi Backend làm xong
+    alert('Backend chưa hỗ trợ API Register');
     setIsLoading(false);
-    return true;
+    return false;
   };
 
   const logout = useCallback(() => {
     setCurrentUser(null);
     localStorage.removeItem('melodies-active-user');
+    localStorage.removeItem('melodies-jwt');
     router.push('/');
   }, [router]);
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ currentUser, login, verifyOtp, register, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

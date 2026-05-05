@@ -7,11 +7,13 @@ import Link from 'next/link';
 import styles from '@/app/styles/auth.module.css';
 
 export default function LoginPage() {
-  const { login, isLoading } = useAuth();
+  const { login, verifyOtp, isLoading } = useAuth();
   const router = useRouter();
   
+  const [step, setStep] = useState<'login' | 'otp'>('login');
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
+  const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -19,14 +21,32 @@ export default function LoginPage() {
     setError('');
     
     if (!email || !pass) {
-      return setError('Please fill all fields');
+      return setError('Vui lòng nhập đầy đủ thông tin');
     }
 
-    const success = await login(email, pass);
-    if (success) {
+    const res = await login(email, pass);
+    if (res.success && res.requires2FA) {
+      setStep('otp');
+    } else if (res.success) {
       router.push('/');
     } else {
-      setError('Invalid email or password');
+      setError(res.error || 'Email hoặc mật khẩu không hợp lệ');
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!otp || otp.length < 6) {
+      return setError('Mã OTP không hợp lệ');
+    }
+
+    const res = await verifyOtp(email, otp);
+    if (res.success) {
+      router.push('/');
+    } else {
+      setError(res.error || 'Mã OTP sai hoặc đã hết hạn');
     }
   };
 
@@ -54,32 +74,60 @@ export default function LoginPage() {
 
         {error && <div className={styles.error}>{error}</div>}
 
-        <form className={styles.form} onSubmit={handleLogin}>
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Email address</label>
-            <input 
-              type="email" 
-              className={styles.input} 
-              placeholder="name@example.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Password</label>
-            <input 
-              type="password" 
-              className={styles.input} 
-              placeholder="••••••••"
-              value={pass}
-              onChange={e => setPass(e.target.value)}
-            />
-          </div>
+        {step === 'login' ? (
+          <form className={styles.form} onSubmit={handleLogin}>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Email</label>
+              <input 
+                type="email" 
+                className={styles.input} 
+                placeholder="name@example.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Mật khẩu</label>
+              <input 
+                type="password" 
+                className={styles.input} 
+                placeholder="••••••••"
+                value={pass}
+                onChange={e => setPass(e.target.value)}
+              />
+            </div>
 
-          <button type="submit" className={styles.submitBtn} disabled={isLoading}>
-            {isLoading ? 'Logging in...' : 'Log In'}
-          </button>
-        </form>
+            <button type="submit" className={styles.submitBtn} disabled={isLoading}>
+              {isLoading ? 'Đang xử lý...' : 'Đăng nhập'}
+            </button>
+          </form>
+        ) : (
+          <form className={styles.form} onSubmit={handleVerifyOtp}>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Mã xác thực (OTP)</label>
+              <input 
+                type="text" 
+                className={styles.input} 
+                placeholder="Nhập 6 số OTP (Xem trong console backend)"
+                value={otp}
+                onChange={e => setOtp(e.target.value)}
+                maxLength={6}
+              />
+            </div>
+            <button type="submit" className={styles.submitBtn} disabled={isLoading}>
+              {isLoading ? 'Đang xác thực...' : 'Xác nhận OTP'}
+            </button>
+            <button 
+              type="button" 
+              className={styles.submitBtn} 
+              style={{ marginTop: '10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)' }}
+              onClick={() => setStep('login')}
+              disabled={isLoading}
+            >
+              Quay lại
+            </button>
+          </form>
+        )}
 
         <div className={styles.footer}>
           Don't have an account? 

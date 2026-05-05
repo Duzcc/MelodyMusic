@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Base API URL
-  const API_URL = 'http://localhost/melodymusic-api/api';
+  const API_URL = 'http://localhost:8000/api';
 
   // Helper to fetch CSRF token
   const fetchCsrfToken = async () => {

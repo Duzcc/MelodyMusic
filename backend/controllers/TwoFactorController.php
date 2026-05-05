@@ -83,8 +83,25 @@ class TwoFactorController extends BaseController
         $repo = new SecureRepository();
         $user = $repo->findByEmail($email);
         
+        if (!$user) {
+            $this->json([
+                'success' => false,
+                'message' => 'Người dùng không tồn tại'
+            ], 404);
+            return;
+        }
+        
         $jwtService = new JwtService();
-        $token = $jwtService->generateToken($user);
+        
+        // Không đưa nguyên Object $user vào token (vì vướng mật khẩu hash và sai kiểu mảng)
+        // Chỉ truyền các thông tin cần thiết và an toàn
+        $payload = [
+            'id'    => $user->id,
+            'email' => $user->email,
+            'name'  => $user->name
+        ];
+        
+        $token = $jwtService->generateToken($payload);
 
         // 6. Trả kết quả kèm Token
         $this->json([

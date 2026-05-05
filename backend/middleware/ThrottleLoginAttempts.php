@@ -1,7 +1,8 @@
 <?php
 // =============================================
 // MIDDLEWARE: CHỐNG BRUTE FORCE
-// Progressive Lockout: Khóa lử tiến theo số lần sai
+// Progressive Lockout: Khóa lũy tiến theo số lần sai
+// Key: IP + Email → Sai user này không ảnh hưởng user khác
 // =============================================
 
 class ThrottleLoginAttempts
@@ -16,16 +17,23 @@ class ThrottleLoginAttempts
     private const PERMANENT_THRESHOLD = 25; // Sai 25+ lần → khóa hẳn
 
     /**
+     * Tạo session key theo cặp IP + Email.
+     * Mỗi cặp có bộ đếm riêng → Sai user này không khóa user khác.
+     */
+    private static function buildKey(string $email = ''): string
+    {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        return 'login_fail_' . $ip . ':' . strtolower(trim($email));
+    }
+
+    /**
      * Xác định thời gian khóa dựa trên số lần sai tích lũy.
-     * Trả về NULL nếu chưa đến ngưỡng nào.
-     * Trả về -1 nếu đến ngưỡng khóa vĩnh viễn.
      */
     private static function getLockDuration(int $count): ?int
     {
         if ($count >= self::PERMANENT_THRESHOLD) {
-            return -1; // Khóa vĩnh viễn (session)
+            return -1;
         }
-        // Duyệt từ ngưỡng cao xuống thấp
         $tiers = self::LOCK_TIERS;
         krsort($tiers);
         foreach ($tiers as $threshold => $minutes) {
@@ -33,7 +41,7 @@ class ThrottleLoginAttempts
                 return $minutes;
             }
         }
-        return null; // Chưa đến ngưỡng khóa
+        return null;
     }
 
     // Hàm 1: Đặt ở đầu Controller. Chặn luồng nếu đang bị khóa.
@@ -43,8 +51,11 @@ class ThrottleLoginAttempts
             session_start();
         }
 
-        $ip  = $_SERVER['REMOTE_ADDR'];
-        $key = 'login_fail_' . $ip;
+        // Đọc email từ request body (php://input có thể đọc nhiều lần trong PHP 8)
+        $body  = json_decode(file_get_contents('php://input'), true) ?? [];
+        $email = $body['email'] ?? '';
+
+        $key  = self::buildKey($email);
         $data = $_SESSION[$key] ?? ['count' => 0, 'until' => 0, 'permanent' => false];
 
         // Kiểm tra khóa vĩnh viễn
@@ -53,15 +64,14 @@ class ThrottleLoginAttempts
             header('Content-Type: application/json');
             echo json_encode([
                 'status'  => 'error',
-                'message' => 'IP của bạn đã bị khóa vĩnh viễn do đăng nhập sai quá nhiều lần. Liên hệ quản trị viên.'
+                'message' => 'Tài khoản này đã bị khóa vĩnh viễn từ IP của bạn. Liên hệ quản trị viên.'
             ]);
             exit;
         }
 
         // Kiểm tra khóa tạm thời
         if (time() < $data['until']) {
-            $remainingSeconds = $data['until'] - time();
-            $remainingMinutes = ceil($remainingSeconds / 60);
+            $remainingMinutes = ceil(($data['until'] - time()) / 60);
             http_response_code(429);
             header('Content-Type: application/json');
             echo json_encode([
@@ -73,47 +83,42 @@ class ThrottleLoginAttempts
     }
 
     // Hàm 2: Gọi khi kiểm tra thấy mật khẩu KHÔNG ĐÚNG. Tăng bộ đếm và khóa.
-    public static function recordFailedAttempt(): void
+    public static function recordFailedAttempt(string $email = ''): void
     {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
-        $ip  = $_SERVER['REMOTE_ADDR'];
-        $key = 'login_fail_' . $ip;
+        $key  = self::buildKey($email);
         $data = $_SESSION[$key] ?? ['count' => 0, 'until' => 0, 'permanent' => false];
 
-        // Nếu đang trong thời gian bị khóa thì không tăng thêm (tránh spam)
+        // Nếu đang trong thời gian khóa thì không tăng thêm (tránh spam)
         if (time() < $data['until']) {
             return;
         }
 
-        // Tăng số lần sai tích lũy (không reset sau mỗi đợt khóa)
+        // Tăng số lần sai tích lũy
         $data['count']++;
 
-        // Xác định thời gian khóa mới
         $lockDuration = self::getLockDuration($data['count']);
         if ($lockDuration === -1) {
-            // Khóa vĩnh viễn
             $data['permanent'] = true;
             $data['until']     = PHP_INT_MAX;
         } elseif ($lockDuration !== null) {
-            // Khóa tạm thời theo bảng tiến
             $data['until'] = time() + ($lockDuration * 60);
         }
 
         $_SESSION[$key] = $data;
     }
 
-    // Hàm 3: Gọi khi đăng nhập THÀNH CÔNG — Xóa hoàn toàn lịch sử
-    public static function clear(): void
+    // Hàm 3: Gọi khi đăng nhập THÀNH CÔNG — Xóa lịch sử của đúng email đó.
+    public static function clear(string $email = ''): void
     {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
-        $ip  = $_SERVER['REMOTE_ADDR'];
-        $key = 'login_fail_' . $ip;
+        $key = self::buildKey($email);
         if (isset($_SESSION[$key])) {
             unset($_SESSION[$key]);
         }

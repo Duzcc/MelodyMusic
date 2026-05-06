@@ -117,12 +117,16 @@ export default function LoginPage() {
             <button type="submit" className={styles.submitBtn} disabled={isLoading}>
               {isLoading ? 'Đang xác thực...' : 'Xác nhận OTP'}
             </button>
-            <button 
-              type="button" 
-              className={styles.submitBtn} 
+            <button
+              type="button"
+              className={styles.submitBtn}
               style={{ marginTop: '10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)' }}
-              onClick={() => setStep('login')}
-              disabled={isLoading}
+              onClick={(e) => {
+                e.preventDefault();
+                setOtp('');
+                setError('');
+                setStep('login');
+              }}
             >
               Quay lại
             </button>

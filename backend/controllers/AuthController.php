@@ -65,7 +65,8 @@ class AuthController extends BaseController
     // 6. Xử lý ghi nhận Throttle dựa trên kết quả
     if ($result['status'] === 'success' || $result['status'] === 'requires_2fa') {
         ThrottleLoginAttempts::clear($data['email']);
-    } else {
+    } elseif ($result['status'] !== 'email_not_found') {
+        // Chỉ ghi nhận lỗi nếu email tồn tại (status là 'error' - sai mk hoặc đang bị khóa)
         ThrottleLoginAttempts::recordFailedAttempt($data['email']);
     }
 

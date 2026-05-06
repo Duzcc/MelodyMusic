@@ -64,7 +64,7 @@ class ThrottleLoginAttempts
             header('Content-Type: application/json');
             echo json_encode([
                 'status'  => 'error',
-                'message' => 'Tài khoản này đã bị khóa vĩnh viễn từ IP của bạn. Liên hệ quản trị viên.'
+                'message' => 'Quá nhiều lần thử sai từ thiết bị này. Vui lòng liên hệ quản trị viên.'
             ]);
             exit;
         }
@@ -76,7 +76,7 @@ class ThrottleLoginAttempts
             header('Content-Type: application/json');
             echo json_encode([
                 'status'  => 'error',
-                'message' => "Tài khoản tạm thời bị khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau {$remainingMinutes} phút."
+                'message' => "Quá nhiều lần thử sai. Vui lòng thử lại sau {$remainingMinutes} phút."
             ]);
             exit;
         }

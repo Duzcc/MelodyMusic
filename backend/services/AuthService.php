@@ -28,7 +28,7 @@ class AuthService
 
     if (!$user) {
         return [
-            'status' => 'error',
+            'status'  => 'email_not_found',
             'message' => 'Email không tồn tại'
         ];
     }

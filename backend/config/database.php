@@ -4,7 +4,8 @@
 // CHỈ NHÓM TRƯỞNG SỬA FILE NÀY
 // =============================================
 
-define('DB_HOST', 'localhost');
+// Dùng 127.0.0.1 thay vì localhost để tránh lỗi Unix socket trên macOS
+define('DB_HOST', '127.0.0.1');
 define('DB_NAME', 'melodymusic');
 define('DB_USER', 'root');
 define('DB_PASS', '');

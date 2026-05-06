@@ -121,64 +121,79 @@ export default function Header({ title, showSearch = true }: HeaderProps) {
 
       {/* Right: Actions */}
       <div className={styles.actions}>
-        <Link href="/signup" className={styles.premiumBtn}>
-          Premium
-        </Link>
         <button className={styles.notifBtn} aria-label="Notifications">
           <Bell size={18} />
           <span className={styles.notifDot} />
         </button>
 
-        {/* Avatar với dropdown logout */}
-        <div ref={avatarRef} style={{ position: 'relative' }}>
-          <div
-            className={styles.avatar}
-            onClick={() => setAvatarOpen(prev => !prev)}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className={styles.avatarImg} style={{ background: currentUser ? 'var(--accent-gradient)' : undefined }}>
-              <span>{currentUser ? currentUser.name.charAt(0).toUpperCase() : 'U'}</span>
-            </div>
-            <ChevronDown
-              size={14}
-              className={styles.avatarChevron}
-              style={{ transform: avatarOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
-            />
-          </div>
-
-          {/* Dropdown menu */}
-          {avatarOpen && currentUser && (
-            <div style={{
-              position: 'absolute', top: 'calc(100% + 10px)', right: 0,
-              minWidth: '180px',
-              background: '#1e1e2e', border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '12px', overflow: 'hidden',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-              zIndex: 1000,
-            }}>
-              {/* User info */}
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                <p style={{ fontSize: '14px', fontWeight: 'bold', color: 'white' }}>{currentUser.name}</p>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>{currentUser.email}</p>
+        {currentUser ? (
+          /* === ĐÃ ĐĂNG NHẬP: Avatar + dropdown === */
+          <div ref={avatarRef} style={{ position: 'relative' }}>
+            <div
+              className={styles.avatar}
+              onClick={() => setAvatarOpen(prev => !prev)}
+              style={{ cursor: 'pointer' }}
+            >
+              <div className={styles.avatarImg} style={{ background: 'var(--accent-gradient)' }}>
+                <span>{currentUser.name.charAt(0).toUpperCase()}</span>
               </div>
-              {/* Logout */}
-              <button
-                onClick={() => { logout(); setAvatarOpen(false); }}
-                style={{
-                  width: '100%', padding: '12px 16px', background: 'transparent',
-                  border: 'none', color: '#ff6b6b', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: '10px',
-                  fontSize: '14px', fontWeight: '500',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,107,107,0.1)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-              >
-                <LogOut size={16} />
-                Logout
-              </button>
+              <ChevronDown
+                size={14}
+                className={styles.avatarChevron}
+                style={{ transform: avatarOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+              />
             </div>
-          )}
-        </div>
+
+            {avatarOpen && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 10px)', right: 0,
+                minWidth: '200px',
+                background: '#1e1e2e', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '12px', overflow: 'hidden',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                zIndex: 1000,
+              }}>
+                {/* User info */}
+                <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  <p style={{ fontSize: '14px', fontWeight: 'bold', color: 'white' }}>{currentUser.name}</p>
+                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>{currentUser.email}</p>
+                </div>
+                {/* Logout */}
+                <button
+                  onClick={() => { logout(); setAvatarOpen(false); }}
+                  style={{
+                    width: '100%', padding: '12px 16px', background: 'transparent',
+                    border: 'none', color: '#ff6b6b', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    fontSize: '14px', fontWeight: '500',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,107,107,0.1)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <LogOut size={16} />
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* === CHƯA ĐĂNG NHẬP: Nút Log in === */
+          <Link
+            href="/login"
+            style={{
+              padding: '8px 18px',
+              borderRadius: '20px',
+              background: 'var(--accent-gradient)',
+              color: 'white',
+              fontWeight: '600',
+              fontSize: '14px',
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Log in
+          </Link>
+        )}
       </div>
     </header>
   );

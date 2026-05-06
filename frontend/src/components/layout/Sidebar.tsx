@@ -95,3 +95,71 @@ export default function Sidebar() {
     </aside>
   );
 }
+
+function UserDropdown({ name, onLogout }: { name: string; onLogout: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <div
+        onClick={() => setOpen(prev => !prev)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '12px',
+          padding: '10px 14px', borderRadius: '12px', cursor: 'pointer',
+          background: open ? 'rgba(255,255,255,0.08)' : 'transparent',
+          transition: 'background 0.2s',
+        }}
+      >
+        <div style={{
+          width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
+          background: 'var(--accent-gradient)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontWeight: 'bold', fontSize: '15px',
+        }}>
+          {name.charAt(0).toUpperCase()}
+        </div>
+        <div style={{ flex: 1, overflow: 'hidden' }}>
+          <p style={{ fontSize: '14px', fontWeight: 'bold', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+            {name}
+          </p>
+          <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Free Plan</p>
+        </div>
+      </div>
+
+      {open && (
+        <div style={{
+          position: 'absolute', bottom: 'calc(100% + 8px)', left: 0, right: 0,
+          background: '#1e1e2e', border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '12px', overflow: 'hidden',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+        }}>
+          <button
+            onClick={() => { onLogout(); setOpen(false); }}
+            style={{
+              width: '100%', padding: '12px 16px', background: 'transparent',
+              border: 'none', color: '#ff6b6b', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: '10px',
+              fontSize: '14px', fontWeight: '500',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,107,107,0.1)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          >
+            <LogOut size={16} />
+            Logout
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

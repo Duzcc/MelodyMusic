@@ -76,22 +76,16 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Profile or Premium CTA */}
-      {currentUser ? (
-        <UserDropdown name={currentUser.name} onLogout={logout} />
-      ) : (
-        <div className={styles.premiumBox}>
-          <div className={styles.premiumGradient} />
-          <p className={styles.premiumTitle}>Go Premium!</p>
-          <p className={styles.premiumSub}>Get unlimited access to all songs</p>
-          <Link href="/signup" className={styles.premiumBtn}>
-            Sign Up
-          </Link>
-          <Link href="/login" style={{display: 'block', textAlign: 'center', fontSize: '13px', marginTop: '12px', color: 'var(--text-secondary)'}}>
-            Already have an account? <span style={{color: 'white', fontWeight: 'bold'}}>Log in</span>
-          </Link>
-        </div>
-      )}
+      {/* Premium CTA */}
+      <div className={styles.premiumBox}>
+        <div className={styles.premiumGradient} />
+        <p className={styles.premiumTitle}>Go Premium!</p>
+        <p className={styles.premiumSub}>Get unlimited access to all songs</p>
+        <Link href="/signup" className={styles.premiumBtn}>
+          Sign Up
+        </Link>
+      </div>
+
     </aside>
   );
 }

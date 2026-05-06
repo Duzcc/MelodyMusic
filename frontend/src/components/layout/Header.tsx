@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, Bell, ChevronDown, Menu, X, Play } from 'lucide-react';
+import { Search, Bell, ChevronDown, LogOut, Menu, X, Play } from 'lucide-react';
 import { usePlayer } from '@/context/PlayerContext';
+import { useAuth } from '@/context/AuthContext';
 import { songs, artists, albums } from '@/lib/data';
 import styles from './Header.module.css';
 
@@ -17,9 +18,12 @@ export default function Header({ title, showSearch = true }: HeaderProps) {
   const [searchValue, setSearchValue] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  
+  const [avatarOpen, setAvatarOpen] = useState(false);
+
   const searchRef = useRef<HTMLDivElement>(null);
+  const avatarRef = useRef<HTMLDivElement>(null);
   const { playSong } = usePlayer();
+  const { currentUser, logout } = useAuth();
   const router = useRouter();
 
   // Basic search logic
@@ -31,11 +35,14 @@ export default function Header({ title, showSearch = true }: HeaderProps) {
 
   const hasResults = searchResults.songs.length > 0 || searchResults.artists.length > 0 || searchResults.albums.length > 0;
 
-  // Handle clicking outside to close
+  // Handle clicking outside to close search
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowResults(false);
+      }
+      if (avatarRef.current && !avatarRef.current.contains(event.target as Node)) {
+        setAvatarOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -121,11 +128,56 @@ export default function Header({ title, showSearch = true }: HeaderProps) {
           <Bell size={18} />
           <span className={styles.notifDot} />
         </button>
-        <div className={styles.avatar}>
-          <div className={styles.avatarImg}>
-            <span>U</span>
+
+        {/* Avatar với dropdown logout */}
+        <div ref={avatarRef} style={{ position: 'relative' }}>
+          <div
+            className={styles.avatar}
+            onClick={() => setAvatarOpen(prev => !prev)}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className={styles.avatarImg} style={{ background: currentUser ? 'var(--accent-gradient)' : undefined }}>
+              <span>{currentUser ? currentUser.name.charAt(0).toUpperCase() : 'U'}</span>
+            </div>
+            <ChevronDown
+              size={14}
+              className={styles.avatarChevron}
+              style={{ transform: avatarOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+            />
           </div>
-          <ChevronDown size={14} className={styles.avatarChevron} />
+
+          {/* Dropdown menu */}
+          {avatarOpen && currentUser && (
+            <div style={{
+              position: 'absolute', top: 'calc(100% + 10px)', right: 0,
+              minWidth: '180px',
+              background: '#1e1e2e', border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '12px', overflow: 'hidden',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+              zIndex: 1000,
+            }}>
+              {/* User info */}
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                <p style={{ fontSize: '14px', fontWeight: 'bold', color: 'white' }}>{currentUser.name}</p>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>{currentUser.email}</p>
+              </div>
+              {/* Logout */}
+              <button
+                onClick={() => { logout(); setAvatarOpen(false); }}
+                style={{
+                  width: '100%', padding: '12px 16px', background: 'transparent',
+                  border: 'none', color: '#ff6b6b', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  fontSize: '14px', fontWeight: '500',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,107,107,0.1)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                <LogOut size={16} />
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

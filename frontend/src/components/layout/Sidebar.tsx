@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Compass, Music2, Mic2, ListMusic, Heart, Clock, TrendingUp, LogOut, Radio } from 'lucide-react';
+import { Home, Compass, Music2, Mic2, ListMusic, Heart, Clock, LogOut, Radio } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useState, useRef, useEffect } from 'react';
 import styles from './Sidebar.module.css';
 
 const navLinks = [
@@ -77,20 +78,7 @@ export default function Sidebar() {
 
       {/* Profile or Premium CTA */}
       {currentUser ? (
-        <div className={styles.premiumBox} style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
-          <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-            <div style={{width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'}}>
-              {currentUser.name.charAt(0).toUpperCase()}
-            </div>
-            <div style={{flex: 1, overflow: 'hidden'}}>
-              <p style={{fontSize: '14px', fontWeight: 'bold', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden'}}>{currentUser.name}</p>
-              <p style={{fontSize: '11px', color: 'var(--text-secondary)'}}>Free Plan</p>
-            </div>
-          </div>
-          <button onClick={logout} className={styles.premiumBtn} style={{background: 'rgba(255,255,255,0.1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '8px', marginTop: '4px'}}>
-            <LogOut size={16} /> Logout
-          </button>
-        </div>
+        <UserDropdown name={currentUser.name} onLogout={logout} />
       ) : (
         <div className={styles.premiumBox}>
           <div className={styles.premiumGradient} />

@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: true, requires2FA: true };
       }
 
-      if (data.status === 'error') {
+      if (data.status === 'email_not_found' || data.status === 'error') {
         setIsLoading(false);
         return { success: false, error: data.message || 'Lỗi đăng nhập' };
       }

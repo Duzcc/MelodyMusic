@@ -9,7 +9,7 @@ import styles from '@/app/styles/auth.module.css';
 export default function LoginPage() {
   const { login, verifyOtp, isLoading } = useAuth();
   const router = useRouter();
-  
+
   const [step, setStep] = useState<'login' | 'otp'>('login');
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
@@ -19,7 +19,7 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     if (!email || !pass) {
       return setError('Vui lòng nhập đầy đủ thông tin');
     }
@@ -56,19 +56,19 @@ export default function LoginPage() {
       <div className={styles.card}>
         <div className={styles.logo}>
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="url(#gradAuth)" strokeWidth="2"/>
-            <circle cx="12" cy="12" r="4" fill="url(#gradAuth)"/>
-            <line x1="12" y1="2" x2="12" y2="8" stroke="url(#gradAuth)" strokeWidth="2" strokeLinecap="round"/>
+            <circle cx="12" cy="12" r="10" stroke="url(#gradAuth)" strokeWidth="2" />
+            <circle cx="12" cy="12" r="4" fill="url(#gradAuth)" />
+            <line x1="12" y1="2" x2="12" y2="8" stroke="url(#gradAuth)" strokeWidth="2" strokeLinecap="round" />
             <defs>
               <linearGradient id="gradAuth" x1="0" y1="0" x2="24" y2="24">
-                <stop offset="0%" stopColor="#c90076"/>
-                <stop offset="100%" stopColor="#7b2ff7"/>
+                <stop offset="0%" stopColor="#c90076" />
+                <stop offset="100%" stopColor="#7b2ff7" />
               </linearGradient>
             </defs>
           </svg>
           <span className={styles.logoText}>Melodies</span>
         </div>
-        
+
         <h1 className={styles.title}>Welcome back</h1>
         <p className={styles.subtitle}>Log in to access your library</p>
 
@@ -78,9 +78,9 @@ export default function LoginPage() {
           <form className={styles.form} onSubmit={handleLogin}>
             <div className={styles.formGroup}>
               <label className={styles.label}>Email</label>
-              <input 
-                type="email" 
-                className={styles.input} 
+              <input
+                type="email"
+                className={styles.input}
                 placeholder="name@example.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
@@ -88,9 +88,9 @@ export default function LoginPage() {
             </div>
             <div className={styles.formGroup}>
               <label className={styles.label}>Mật khẩu</label>
-              <input 
-                type="password" 
-                className={styles.input} 
+              <input
+                type="password"
+                className={styles.input}
                 placeholder="••••••••"
                 value={pass}
                 onChange={e => setPass(e.target.value)}
@@ -105,10 +105,10 @@ export default function LoginPage() {
           <form className={styles.form} onSubmit={handleVerifyOtp}>
             <div className={styles.formGroup}>
               <label className={styles.label}>Mã xác thực (OTP)</label>
-              <input 
-                type="text" 
-                className={styles.input} 
-                placeholder="Nhập 6 số OTP (Xem trong console backend)"
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="Nhập mã OTP"
                 value={otp}
                 onChange={e => setOtp(e.target.value)}
                 maxLength={6}
@@ -134,7 +134,7 @@ export default function LoginPage() {
         )}
 
         <div className={styles.footer}>
-          Don't have an account? 
+          Don't have an account?
           <Link href="/signup" className={styles.link}>Sign up for free</Link>
         </div>
       </div>

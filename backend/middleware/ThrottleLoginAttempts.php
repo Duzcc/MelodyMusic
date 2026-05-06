@@ -5,16 +5,10 @@
 // Key: IP + Email → Sai user này không ảnh hưởng user khác
 // =============================================
 
+require_once __DIR__ . '/../utils/LockoutPolicy.php';
+
 class ThrottleLoginAttempts
 {
-    // Bảng khóa dần (số lần sai tích lũy => phút khóa)
-    private const LOCK_TIERS = [
-        5  => 5,    // Sai 5 lần  → khóa 5 phút
-        10 => 10,   // Sai 10 lần → khóa 10 phút
-        15 => 15,   // Sai 15 lần → khóa 15 phút
-        20 => 30,   // Sai 20 lần → khóa 30 phút
-    ];
-    private const PERMANENT_THRESHOLD = 25; // Sai 25+ lần → khóa hẳn
 
     /**
      * Tạo session key theo cặp IP + Email.
@@ -26,23 +20,7 @@ class ThrottleLoginAttempts
         return 'login_fail_' . $ip . ':' . strtolower(trim($email));
     }
 
-    /**
-     * Xác định thời gian khóa dựa trên số lần sai tích lũy.
-     */
-    private static function getLockDuration(int $count): ?int
-    {
-        if ($count >= self::PERMANENT_THRESHOLD) {
-            return -1;
-        }
-        $tiers = self::LOCK_TIERS;
-        krsort($tiers);
-        foreach ($tiers as $threshold => $minutes) {
-            if ($count >= $threshold) {
-                return $minutes;
-            }
-        }
-        return null;
-    }
+
 
     // Hàm 1: Đặt ở đầu Controller. Chặn luồng nếu đang bị khóa.
     public static function handle(): void
@@ -100,7 +78,7 @@ class ThrottleLoginAttempts
         // Tăng số lần sai tích lũy
         $data['count']++;
 
-        $lockDuration = self::getLockDuration($data['count']);
+        $lockDuration = LockoutPolicy::getLockDuration($data['count']);
         if ($lockDuration === -1) {
             $data['permanent'] = true;
             $data['until']     = PHP_INT_MAX;

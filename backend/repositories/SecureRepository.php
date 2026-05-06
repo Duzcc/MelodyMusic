@@ -97,34 +97,22 @@ class SecureRepository extends UserRepository
             return;
         }
 
-        // Bảng cấp độ khóa (số lần sai tích lũy => phút khóa)
-        $lockTiers = [
-            20 => 30,   // 20 sai → khóa 30 phút
-            15 => 15,   // 15 sai → khóa 15 phút
-            10 => 10,   // 10 sai → khóa 10 phút
-            5  => 5,    //  5 sai → khóa 5 phút
-        ];
-        $permanentThreshold = 25;
-
         // Lấy số lần sai hiện tại
         $user = parent::findByEmail($email);
         if (!$user) return;
 
+        require_once __DIR__ . '/../utils/LockoutPolicy.php';
+        
         $newCount = $user->login_fail_count + 1;
         $lockedUntil = null;
         $isLocked = 0;
 
-        if ($newCount >= $permanentThreshold) {
-            // Khóa vĩnh viễn
+        $duration = LockoutPolicy::getLockDuration($newCount);
+
+        if ($duration === -1) {
             $isLocked = 1;
-        } else {
-            // Xác định cấp độ khóa tạm thời
-            foreach ($lockTiers as $threshold => $minutes) {
-                if ($newCount >= $threshold) {
-                    $lockedUntil = date('Y-m-d H:i:s', time() + $minutes * 60);
-                    break;
-                }
-            }
+        } elseif ($duration !== null) {
+            $lockedUntil = date('Y-m-d H:i:s', time() + $duration * 60);
         }
 
         // Cập nhật DB
